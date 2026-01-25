@@ -4,6 +4,14 @@
   <property name="src.dir" value="src"/>
   <property name="out.dir" value="out"/>
   <property name="classes.dir" value="${out.dir}/classes"/>
+  <property name="lib.dir" value="lib"/>
+
+  <!-- всі jar з папки lib -->
+  <path id="lib.path">
+    <fileset dir="${lib.dir}">
+      <include name="**/*.jar"/>
+    </fileset>
+  </path>
 
   <target name="clean">
     <delete dir="${out.dir}"/>
@@ -16,13 +24,18 @@
       includeantruntime="false"
       encoding="UTF-8"
       source="21"
-      target="21"/>
+      target="21">
+      <classpath refid="lib.path"/>
+    </javac>
   </target>
 
   <target name="run" depends="compile">
-    <java classname="com.example.drivingschool.Main"
-      classpath="${classes.dir}"
-      fork="true"/>
+    <java classname="com.example.drivingschool.Main" fork="true">
+      <classpath>
+        <pathelement path="${classes.dir}"/>
+        <path refid="lib.path"/>
+      </classpath>
+    </java>
   </target>
 
 </project>
