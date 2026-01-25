@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="drivingschool" default="run" basedir=".">
+
+  <property name="src.dir" value="src"/>
+  <property name="out.dir" value="out"/>
+  <property name="classes.dir" value="${out.dir}/classes"/>
+
+  <target name="clean">
+    <delete dir="${out.dir}"/>
+  </target>
+
+  <target name="compile">
+    <mkdir dir="${classes.dir}"/>
+    <javac srcdir="${src.dir}"
+      destdir="${classes.dir}"
+      includeantruntime="false"
+      encoding="UTF-8"
+      source="21"
+      target="21"/>
+  </target>
+
+  <target name="run" depends="compile">
+    <java classname="com.example.drivingschool.Main"
+      classpath="${classes.dir}"
+      fork="true"/>
+  </target>
+
+</project>
