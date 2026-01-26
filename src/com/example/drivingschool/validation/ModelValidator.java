@@ -12,10 +12,6 @@ public final class ModelValidator {
 
   public static void validateStudent(Student s) {
     ValidationUtils.notNull(s, "student");
-    // Якщо в Student ще нема полів — поки тільки id перевіримо.
-    // Коли додаси поля (fullName/phone/email/birthDate) — я дам точні перевірки.
-    // Приклад:
-    // ValidationUtils.positiveLong(s.getStudentId(), "studentId");
   }
 
   public static void validateEnrollment(Enrollment e) {
