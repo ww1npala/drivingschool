@@ -9,11 +9,15 @@ public class Payment {
   private Enrollment enrollment;
 
   private BigDecimal amount;
-  private String paymentDateTime; // yyyy-MM-dd HH:mm
+  private String paymentDateTime; // yyyy-MM-ddTHH:mm:ss (LocalDateTime.toString())
   private PaymentMethod method;
 
-  public Payment(long paymentId, Enrollment enrollment, BigDecimal amount, String paymentDateTime,
+  public Payment(long paymentId,
+      Enrollment enrollment,
+      BigDecimal amount,
+      String paymentDateTime,
       PaymentMethod method) {
+
     this.paymentId = paymentId;
     this.enrollment = enrollment;
     this.amount = amount;
@@ -21,6 +25,20 @@ public class Payment {
     this.method = method;
   }
 
+
+  public boolean isPositiveAmount() {
+    return amount != null && amount.signum() > 0;
+  }
+
+  public boolean isSameEnrollment(Enrollment other) {
+    if (enrollment == null || other == null) {
+      return false;
+    }
+    return enrollment.getEnrollmentId() == other.getEnrollmentId();
+  }
+
+
+  // геттери сеттери
   public long getPaymentId() {
     return paymentId;
   }
@@ -65,7 +83,7 @@ public class Payment {
   public String toString() {
     return "Payment{" +
         "paymentId=" + paymentId +
-        ", enrollment=" + enrollment +
+        ", enrollmentId=" + (enrollment == null ? null : enrollment.getEnrollmentId()) +
         ", amount=" + amount +
         ", paymentDateTime='" + paymentDateTime + '\'' +
         ", method=" + method +

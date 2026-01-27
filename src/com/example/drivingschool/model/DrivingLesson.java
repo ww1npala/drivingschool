@@ -8,13 +8,22 @@ public class DrivingLesson {
   private Instructor instructor;
   private Car car;
 
-  private String startDateTime; // yyyy-MM-dd HH:mm
+  private String startDateTime; // yyyy-MM-ddTHH:mm:ss
   private double durationHours;
 
   private LessonStatus status;
 
-  public DrivingLesson(long lessonId, Enrollment enrollment, Instructor instructor, Car car,
-      String startDateTime, double durationHours, LessonStatus status) {
+  // щоб не списати години двічі
+  private boolean hoursConsumed;
+
+  public DrivingLesson(long lessonId,
+      Enrollment enrollment,
+      Instructor instructor,
+      Car car,
+      String startDateTime,
+      double durationHours,
+      LessonStatus status) {
+
     this.lessonId = lessonId;
     this.enrollment = enrollment;
     this.instructor = instructor;
@@ -22,8 +31,61 @@ public class DrivingLesson {
     this.startDateTime = startDateTime;
     this.durationHours = durationHours;
     this.status = status;
+    this.hoursConsumed = false;
   }
 
+
+  public boolean isPlanned() {
+    return status == LessonStatus.PLANNED;
+  }
+
+  public boolean isCompleted() {
+    return status == LessonStatus.COMPLETED;
+  }
+
+  public boolean isCanceled() {
+    return status == LessonStatus.CANCELED;
+  }
+
+  /**
+   * Завершити урок: - статус стає COMPLETED - години списуються з Enrollment (один раз)
+   */
+  public void complete() {
+    if (status == LessonStatus.CANCELED) {
+      throw new IllegalStateException("Неможливо завершити скасований урок");
+    }
+    if (status == LessonStatus.COMPLETED) {
+      return; // вже завершений
+    }
+
+    if (enrollment == null) {
+      throw new IllegalStateException("Неможливо завершити урок без Enrollment");
+    }
+
+    // списуємо години 1 раз
+    if (!hoursConsumed) {
+      enrollment.consumeHours(durationHours);
+      hoursConsumed = true;
+    }
+
+    status = LessonStatus.COMPLETED;
+  }
+
+  // скасування уроку, повертаємо години назад
+  public void cancel() {
+    if (status == LessonStatus.CANCELED) {
+      return;
+    }
+
+    if (status == LessonStatus.COMPLETED && hoursConsumed && enrollment != null) {
+      enrollment.refundHours(durationHours);
+      hoursConsumed = false;
+    }
+
+    status = LessonStatus.CANCELED;
+  }
+
+  // геттери сеттери
   public long getLessonId() {
     return lessonId;
   }
@@ -80,6 +142,14 @@ public class DrivingLesson {
     this.status = status;
   }
 
+  public boolean isHoursConsumed() {
+    return hoursConsumed;
+  }
+
+  public void setHoursConsumed(boolean hoursConsumed) {
+    this.hoursConsumed = hoursConsumed;
+  }
+
   @Override
   public String toString() {
     return "DrivingLesson{" +
@@ -90,6 +160,7 @@ public class DrivingLesson {
         ", startDateTime='" + startDateTime + '\'' +
         ", durationHours=" + durationHours +
         ", status=" + status +
+        ", hoursConsumed=" + hoursConsumed +
         '}';
   }
 }
