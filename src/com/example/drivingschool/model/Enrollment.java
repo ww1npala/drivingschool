@@ -2,7 +2,7 @@ package com.example.drivingschool.model;
 
 import java.math.BigDecimal;
 
-public class Enrollment {
+public class Enrollment implements Identifiable {
 
   private long enrollmentId;
 
@@ -78,7 +78,7 @@ public class Enrollment {
 
     remainingHours += toRefund;
   }
-  
+
   // геттери сеттери
   public long getEnrollmentId() {
     return enrollmentId;
@@ -134,6 +134,11 @@ public class Enrollment {
 
   public void setRemainingHours(int remainingHours) {
     this.remainingHours = remainingHours;
+  }
+
+  @Override
+  public long getId() {
+    return enrollmentId;
   }
 
   @Override

@@ -1,6 +1,6 @@
 package com.example.drivingschool.model;
 
-public class DrivingLesson {
+public class DrivingLesson implements Identifiable {
 
   private long lessonId;
 
@@ -148,6 +148,11 @@ public class DrivingLesson {
 
   public void setHoursConsumed(boolean hoursConsumed) {
     this.hoursConsumed = hoursConsumed;
+  }
+
+  @Override
+  public long getId() {
+    return lessonId;
   }
 
   @Override

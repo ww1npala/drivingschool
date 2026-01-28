@@ -1,6 +1,6 @@
 package com.example.drivingschool.model;
 
-public class Instructor {
+public class Instructor implements Identifiable {
 
   private long instructorId;
   private String fullName;
@@ -34,6 +34,11 @@ public class Instructor {
 
   public void setPhone(String phone) {
     this.phone = phone;
+  }
+
+  @Override
+  public long getId() {
+    return instructorId;
   }
 
   @Override

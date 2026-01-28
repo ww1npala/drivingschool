@@ -1,6 +1,6 @@
 package com.example.drivingschool.model;
 
-public class Car {
+public class Car implements Identifiable {
 
   private long carId;
   private String plateNumber;
@@ -24,6 +24,11 @@ public class Car {
 
   public void setPlateNumber(String plateNumber) {
     this.plateNumber = plateNumber;
+  }
+
+  @Override
+  public long getId() {
+    return carId;
   }
 
   @Override

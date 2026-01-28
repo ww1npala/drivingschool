@@ -1,6 +1,6 @@
 package com.example.drivingschool.model;
 
-public class Student {
+public class Student implements Identifiable {
 
   private long studentId;
   private String fullName;
@@ -54,6 +54,11 @@ public class Student {
 
   public void setBirthDate(String birthDate) {
     this.birthDate = birthDate;
+  }
+
+  @Override
+  public long getId() {
+    return studentId;
   }
 
   @Override

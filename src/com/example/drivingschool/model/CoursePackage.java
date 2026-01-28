@@ -2,7 +2,7 @@ package com.example.drivingschool.model;
 
 import java.math.BigDecimal;
 
-public class CoursePackage {
+public class CoursePackage implements Identifiable {
 
   private long packageId;
   private int totalHours;
@@ -36,6 +36,11 @@ public class CoursePackage {
 
   public void setPrice(BigDecimal price) {
     this.price = price;
+  }
+
+  @Override
+  public long getId() {
+    return packageId;
   }
 
   @Override

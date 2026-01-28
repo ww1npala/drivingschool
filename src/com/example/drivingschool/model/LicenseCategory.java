@@ -1,6 +1,6 @@
 package com.example.drivingschool.model;
 
-public class LicenseCategory {
+public class LicenseCategory implements Identifiable {
 
   private long categoryId;
   private String code; // A / B / C / D
@@ -39,7 +39,7 @@ public class LicenseCategory {
     return new LicenseCategory(id, "C", 21, "Вантажні автомобілі");
   }
 
- 
+
   public long getCategoryId() {
     return categoryId;
   }
@@ -73,6 +73,11 @@ public class LicenseCategory {
 
   public void setDescription(String description) {
     this.description = description;
+  }
+
+  @Override
+  public long getId() {
+    return categoryId;
   }
 
   @Override

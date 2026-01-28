@@ -2,7 +2,7 @@ package com.example.drivingschool.model;
 
 import java.math.BigDecimal;
 
-public class Payment {
+public class Payment implements Identifiable {
 
   private long paymentId;
 
@@ -77,6 +77,11 @@ public class Payment {
 
   public void setMethod(PaymentMethod method) {
     this.method = method;
+  }
+
+  @Override
+  public long getId() {
+    return paymentId;
   }
 
   @Override
