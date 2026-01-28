@@ -1,5 +1,13 @@
 package com.example.drivingschool;
 
+import com.example.drivingschool.auth.AuthService;
+import com.example.drivingschool.auth.ConsoleEmailSender;
+import com.example.drivingschool.auth.EmailSender;
+import com.example.drivingschool.domain.services.EnrollmentService;
+import com.example.drivingschool.domain.services.LessonService;
+import com.example.drivingschool.domain.services.PaymentService;
+import com.example.drivingschool.domain.uow.InMemoryUnitOfWork;
+import com.example.drivingschool.domain.uow.UnitOfWork;
 import com.example.drivingschool.generator.DemoDataGenerator;
 import com.example.drivingschool.model.DrivingLesson;
 import com.example.drivingschool.model.Enrollment;
@@ -7,6 +15,13 @@ import com.example.drivingschool.model.LessonStatus;
 import com.example.drivingschool.model.Payment;
 import com.example.drivingschool.model.PaymentMethod;
 import com.example.drivingschool.model.Student;
+import com.example.drivingschool.model.User;
+import com.example.drivingschool.presentation.AuthView;
+import com.example.drivingschool.presentation.MainMenuView;
+import com.example.drivingschool.repository.entities.DrivingLessonRepository;
+import com.example.drivingschool.repository.entities.EnrollmentRepository;
+import com.example.drivingschool.repository.entities.PaymentRepository;
+import com.example.drivingschool.repository.entities.UserRepository;
 import com.example.drivingschool.storage.JsonFileStorage;
 import com.example.drivingschool.validation.ModelValidator;
 import java.math.BigDecimal;
@@ -61,7 +76,6 @@ public class Main {
     /**
      ====================3 etap=================
      **/
-
     Map<Long, Enrollment> enrollmentRepo = new HashMap<>();
     Map<Long, DrivingLesson> lessonRepo = new HashMap<>();
     Map<Long, Payment> paymentRepo = new HashMap<>();
@@ -130,7 +144,6 @@ public class Main {
     DrivingLesson foundLesson = lessonRepo.get(anyLessonId);
     System.out.println("READ Lesson #" + anyLessonId + ": status=" + foundLesson.getStatus());
 
-    // оновлюємо (змінимо статус на COMPLETED)
     LessonStatus oldStatus = foundLesson.getStatus();
     foundLesson.setStatus(LessonStatus.COMPLETED);
     ModelValidator.validateLesson(foundLesson);
@@ -138,7 +151,6 @@ public class Main {
     System.out.println("UPDATE Lesson #" + anyLessonId + ": status " + oldStatus + " -> "
         + foundLesson.getStatus());
 
-    // створюємо (додамо новий урок до існуючого enrollment)
     long newLessonId = maxLessonId(lessonRepo) + 1L;
     DrivingLesson newLesson = new DrivingLesson(
         newLessonId,
@@ -155,7 +167,6 @@ public class Main {
         "CREATE Lesson #" + newLessonId + ": enrollmentId=" + newLesson.getEnrollment()
             .getEnrollmentId());
 
-    // видалення
     lessonRepo.remove(newLessonId);
     System.out.println("DELETE Lesson #" + newLessonId + ": видалено");
 
@@ -164,7 +175,6 @@ public class Main {
     Payment foundPayment = paymentRepo.get(anyPaymentId);
     System.out.println("READ Payment #" + anyPaymentId + ": amount=" + foundPayment.getAmount());
 
-    // зміна методу оплати
     PaymentMethod oldMethod = foundPayment.getMethod();
     foundPayment.setMethod(PaymentMethod.CARD);
     ModelValidator.validatePayment(foundPayment);
@@ -172,7 +182,6 @@ public class Main {
     System.out.println("UPDATE Payment #" + anyPaymentId + ": method " + oldMethod + " -> "
         + foundPayment.getMethod());
 
-    // створення
     long newPaymentId = maxPaymentId(paymentRepo) + 1L;
     Payment newPayment = new Payment(
         newPaymentId,
@@ -187,97 +196,41 @@ public class Main {
         "CREATE Payment #" + newPaymentId + ": enrollmentId=" + newPayment.getEnrollment()
             .getEnrollmentId());
 
-    // видалення
     paymentRepo.remove(newPaymentId);
     System.out.println("DELETE Payment #" + newPaymentId + ": видалено");
 
-    /**
-     Пошук і фільтрація
-     **/
-
-    // фільтр уроків за їх статусом
-    int planned = 0;
-    int completed = 0;
-    int canceled = 0;
-    for (DrivingLesson l : lessonRepo.values()) {
-      if (l.getStatus() == LessonStatus.PLANNED) {
-        planned++;
-      } else if (l.getStatus() == LessonStatus.COMPLETED) {
-        completed++;
-      } else if (l.getStatus() == LessonStatus.CANCELED) {
-        canceled++;
-      }
-    }
-
+    // auth + ui
     System.out.println();
-    System.out.println("Фільтрація уроків за статусами:");
-    System.out.println("  Заплановано: " + planned);
-    System.out.println("  Проведено:   " + completed);
-    System.out.println("  Скасовано:   " + canceled);
+    System.out.println("===== AUTH =====");
 
-    // пошук записів за категорією
-    String searchCategory = "B";
-    int byCategory = 0;
-    for (Enrollment e : enrollmentRepo.values()) {
-      if (e.getLicenseCategory() != null && searchCategory.equalsIgnoreCase(
-          e.getLicenseCategory().getCode())) {
-        byCategory++;
-      }
-    }
-    System.out.println();
-    System.out.println("Пошук записів за категорією '" + searchCategory + "': " + byCategory);
+    Path usersFile = Path.of("out", "users.json");
+    UserRepository userRepository = new UserRepository(usersFile);
 
-    // фільтрація оплат, сума в діапазоні
-    BigDecimal min = BigDecimal.valueOf(300);
-    BigDecimal max = BigDecimal.valueOf(2000);
-    int paymentsInRange = 0;
-    BigDecimal sumInRange = BigDecimal.ZERO;
+    EmailSender emailSender = new ConsoleEmailSender(); // потім замінимо на Gmail SMTP
+    AuthService authService = new AuthService(userRepository, emailSender);
 
-    for (Payment p : paymentRepo.values()) {
-      BigDecimal a = p.getAmount();
-      if (a.compareTo(min) >= 0 && a.compareTo(max) <= 0) {
-        paymentsInRange++;
-        sumInRange = sumInRange.add(a);
-      }
-    }
+    AuthView authView = new AuthView(authService);
+    User currentUser = authView.start();
 
-    System.out.println();
-    System.out.println(
-        "Фільтрація оплат (сума " + min + " .. " + max + " грн): " + paymentsInRange + " шт, разом "
-            + sumInRange + " грн");
+    // domian service
+    EnrollmentRepository enrollmentRepository = new EnrollmentRepository(enrollmentsFile);
+    DrivingLessonRepository drivingLessonRepository = new DrivingLessonRepository(lessonsFile);
+    PaymentRepository paymentRepository = new PaymentRepository(paymentsFile);
 
-    // пошук топ по сумі оплат
-    Map<Long, BigDecimal> paidByEnrollment = new HashMap<>();
-    BigDecimal totalPaid = BigDecimal.ZERO;
+    UnitOfWork uow = new InMemoryUnitOfWork(enrollmentRepository, drivingLessonRepository,
+        paymentRepository);
 
-    for (Payment p : paymentRepo.values()) {
-      totalPaid = totalPaid.add(p.getAmount());
-      long enrollmentId = p.getEnrollment().getEnrollmentId();
+    EnrollmentService enrollmentService = new EnrollmentService(uow);
+    LessonService lessonService = new LessonService(uow);
+    PaymentService paymentService = new PaymentService(uow);
 
-      BigDecimal current = paidByEnrollment.get(enrollmentId);
-      if (current == null) {
-        current = BigDecimal.ZERO;
-      }
-
-      paidByEnrollment.put(enrollmentId, current.add(p.getAmount()));
-    }
-
-    long bestEnrollmentId = -1;
-    BigDecimal bestAmount = BigDecimal.ZERO;
-    for (Map.Entry<Long, BigDecimal> entry : paidByEnrollment.entrySet()) {
-      if (entry.getValue().compareTo(bestAmount) > 0) {
-        bestAmount = entry.getValue();
-        bestEnrollmentId = entry.getKey();
-      }
-    }
-
-    System.out.println();
-    System.out.println("Фінанси:");
-    System.out.println("  Загальна сума оплат: " + totalPaid + " грн");
-    if (bestEnrollmentId != -1) {
-      System.out.println(
-          "  Найбільше оплат по запису #" + bestEnrollmentId + ": " + bestAmount + " грн");
-    }
+    MainMenuView menuView = new MainMenuView(
+        currentUser,
+        enrollmentService,
+        lessonService,
+        paymentService
+    );
+    menuView.start();
   }
 
   private static long maxEnrollmentId(Map<Long, Enrollment> repo) {
