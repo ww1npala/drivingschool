@@ -5,14 +5,16 @@ import java.time.LocalDateTime;
 public class User implements Identifiable {
 
   private final long id;
+  private final String login;         // NEW
   private final String email;
   private final String passwordHash;
   private final UserRole role;
   private boolean emailVerified;
   private final LocalDateTime createdAt;
 
-  public User(long id, String email, String passwordHash, UserRole role) {
+  public User(long id, String login, String email, String passwordHash, UserRole role) {
     this.id = id;
+    this.login = login;
     this.email = email;
     this.passwordHash = passwordHash;
     this.role = role;
@@ -23,6 +25,10 @@ public class User implements Identifiable {
   @Override
   public long getId() {
     return id;
+  }
+
+  public String getLogin() {
+    return login;
   }
 
   public String getEmail() {
@@ -43,5 +49,9 @@ public class User implements Identifiable {
 
   public void verifyEmail() {
     this.emailVerified = true;
+  }
+
+  public LocalDateTime getCreatedAt() {
+    return createdAt;
   }
 }

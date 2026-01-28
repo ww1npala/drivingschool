@@ -2,38 +2,33 @@ package com.example.drivingschool.presentation;
 
 import com.example.drivingschool.auth.AuthService;
 import com.example.drivingschool.model.User;
+import com.example.drivingschool.model.UserRole;
 import java.util.Scanner;
 
-public class AuthView {
+public final class AuthView {
 
-  private final AuthService authService;
-  private final Scanner scanner = new Scanner(System.in);
+  private final AuthService auth;
+  private final Scanner sc = new Scanner(System.in);
 
-  public AuthView(AuthService authService) {
-    this.authService = authService;
+  public AuthView(AuthService auth) {
+    this.auth = auth;
   }
 
   public User start() {
     while (true) {
-      System.out.println("\n=== АВТОШКОЛА ===");
-      System.out.println("1) Реєстрація");
-      System.out.println("2) Вхід");
-      System.out.println("0) Вихід");
+      System.out.println("\n=== AUTH ===");
+      System.out.println("1) Login");
+      System.out.println("2) Register");
       System.out.print("> ");
-
-      String choice = scanner.nextLine();
+      String choice = sc.nextLine();
 
       try {
-        switch (choice) {
-          case "1":
-            register();
-            break;
-          case "2":
-            return login();
-          case "0":
-            System.exit(0);
-          default:
-            System.out.println("Невірний вибір");
+        if ("1".equals(choice)) {
+          return loginFlow();
+        } else if ("2".equals(choice)) {
+          return registerFlow();
+        } else {
+          System.out.println("Невірний вибір");
         }
       } catch (Exception ex) {
         System.out.println("Помилка: " + ex.getMessage());
@@ -41,32 +36,61 @@ public class AuthView {
     }
   }
 
-  private void register() {
-    System.out.print("Email: ");
-    String email = scanner.nextLine();
+  private User registerFlow() {
+    System.out.print("Введіть ваш Email: ");
+    String email = sc.nextLine();
 
-    System.out.print("Пароль: ");
-    String password = scanner.nextLine();
+    auth.beginEmailVerification(email);
+    System.out.println("Код відправлено на пошту.");
 
-    authService.startRegistration(email, password);
+    while (true) {
+      System.out.print("Введіть код (Дійсний 2 хвилини) або 'r' щоб надіслати ще раз: ");
+      String code = sc.nextLine();
 
-    System.out.print("Введіть код з пошти: ");
-    String code = scanner.nextLine();
+      if ("r".equalsIgnoreCase(code.trim())) {
+        auth.resendCode(email);
+        System.out.println("Новий код відправлено.");
+        continue;
+      }
 
-    authService.confirmCode(email, code, password);
+      boolean ok = auth.verifyEmailCode(email, code);
+      if (!ok) {
+        System.out.println("Код невірний або прострочений. Введи знову або натисни 'r'.");
+        continue;
+      }
 
-    System.out.println("Реєстрація успішна. Можете увійти.");
+      // код вірний, далі login + пароль
+      System.out.print("Введіть бажаний Login: ");
+      String login = sc.nextLine();
+
+      System.out.print("Введіть пароль: ");
+      String pass1 = sc.nextLine();
+
+      System.out.print("Підтвердіть пароль: ");
+      String pass2 = sc.nextLine();
+
+      if (!pass1.equals(pass2)) {
+        System.out.println("Паролі не співпадають. Спробуй ще раз.");
+        continue;
+      }
+
+      UserRole role = UserRole.USER;
+
+      User created = auth.registerAfterCode(login, email, pass1, role);
+      System.out.println("Реєстрація успішна. Вітаю, " + created.getLogin() + "!");
+      return created;
+    }
   }
 
-  private User login() {
-    System.out.print("Email: ");
-    String email = scanner.nextLine();
+  private User loginFlow() {
+    System.out.print("Введіть логін: ");
+    String login = sc.nextLine();
 
-    System.out.print("Пароль: ");
-    String password = scanner.nextLine();
+    System.out.print("Введіть пароль: ");
+    String password = sc.nextLine();
 
-    User user = authService.login(email, password);
-    System.out.println("Вхід виконано успішно");
-    return user;
+    User u = auth.login(login, password);
+    System.out.println("Успішний вхід. Привіт, " + u.getLogin() + "!");
+    return u;
   }
 }
