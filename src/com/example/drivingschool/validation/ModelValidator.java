@@ -9,7 +9,7 @@ public final class ModelValidator {
 
   private ModelValidator() {
   }
-  
+
   // student
   public static void validateStudent(Student s) {
     ValidationUtils.notNull(s, "student");
@@ -38,7 +38,11 @@ public final class ModelValidator {
     validateStudent(e.getStudent());
 
     ValidationUtils.notNull(e.getLicenseCategory(), "категорія прав");
+
     ValidationUtils.notNull(e.getCoursePackage(), "пакет курсу");
+    if (e.getCoursePackage().getTotalHours() <= 0) {
+      throw new ValidationException("Пакет курсу повинен мати більше 0 годин");
+    }
 
     ValidationUtils.notBlank(e.getStartDate(), "дата початку");
     ValidationUtils.positiveMoney(e.getAgreedPrice(), "ціна курсу");

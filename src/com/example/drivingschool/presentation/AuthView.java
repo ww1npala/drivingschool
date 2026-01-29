@@ -74,7 +74,7 @@ public final class AuthView {
         continue;
       }
 
-      UserRole role = UserRole.USER;
+      UserRole role = UserRole.user;
 
       User created = auth.registerAfterCode(login, email, pass1, role);
       System.out.println("Реєстрація успішна. Вітаю, " + created.getLogin() + "!");

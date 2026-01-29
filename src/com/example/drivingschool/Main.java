@@ -23,6 +23,7 @@ import com.example.drivingschool.repository.entities.PaymentRepository;
 import com.example.drivingschool.repository.entities.UserRepository;
 import com.example.drivingschool.storage.JsonFileStorage;
 import com.example.drivingschool.validation.ModelValidator;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -36,8 +37,15 @@ public class Main {
       Files.createDirectories(Path.of("out"));
     } catch (Exception ignored) {
     }
+    
+    try {
+      Path appsFile = Path.of("out", "applications.json");
+      if (!Files.exists(appsFile)) {
+        Files.writeString(appsFile, "[]", StandardCharsets.UTF_8);
+      }
+    } catch (Exception ignored) {
+    }
 
-    // ===== demo data =====
     List<Enrollment> enrollments = DemoDataGenerator.generateEnrollments(20);
     List<DrivingLesson> lessons = DemoDataGenerator.generateLessons(enrollments, 30);
     List<Payment> payments = DemoDataGenerator.generatePayments(enrollments, 15);
@@ -60,7 +68,7 @@ public class Main {
     JsonFileStorage.saveList(lessonsFile, lessons);
     JsonFileStorage.saveList(paymentsFile, payments);
 
-    // ===== uow + services =====
+    // uow + services
     EnrollmentRepository enrollmentRepo = new EnrollmentRepository(enrollmentsFile);
     DrivingLessonRepository lessonRepo = new DrivingLessonRepository(lessonsFile);
     PaymentRepository paymentRepo = new PaymentRepository(paymentsFile);
@@ -71,7 +79,7 @@ public class Main {
     LessonService lessonService = new LessonService(uow);
     PaymentService paymentService = new PaymentService(uow);
 
-    // ===== auth =====
+    //auth
     Path usersFile = Path.of("out", "users.json");
     UserRepository userRepository = new UserRepository(usersFile);
 
@@ -88,7 +96,7 @@ public class Main {
     AuthView authView = new AuthView(authService);
     User currentUser = authView.start();
 
-    // ===== menu =====
+    // menu
     MainMenuView menuView = new MainMenuView(
         currentUser,
         enrollmentService,

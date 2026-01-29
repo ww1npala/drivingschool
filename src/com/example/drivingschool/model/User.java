@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 public class User implements Identifiable {
 
   private final long id;
-  private final String login;         // NEW
+  private final String login;
   private final String email;
   private final String passwordHash;
   private final UserRole role;
